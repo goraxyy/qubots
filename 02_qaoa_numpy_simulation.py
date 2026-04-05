@@ -325,8 +325,12 @@ noise_success_rates = []  # fraction of shots with correct B=4 assets
 
 for p_err in noise_levels:
     psi_n = apply_qaoa([g1,g2],[b1,b2], psi0, noise=True, p_err=p_err)
-    e_n   = energy_expectation(psi_n)
-    shots_n = sample_bitstrings(psi_n, n_shots=2000)
+    if p_err > 0:
+        e_n     = energy_from_dm(psi_n)
+        shots_n = sample_from_dm(psi_n, n_shots=2000)
+    else:
+        e_n     = energy_expectation(psi_n)
+        shots_n = sample_bitstrings(psi_n, n_shots=2000)
     valid = [s for s in shots_n if s.count('1') == B]
     noise_energies.append(e_n)
     noise_success_rates.append(len(valid)/2000)
