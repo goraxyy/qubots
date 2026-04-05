@@ -44,3 +44,6 @@ node_modules/
 # Generated outputs
 *.png
 outputs/
+
+# in .gitignore — add this line
+outputs/
