@@ -69,7 +69,7 @@ Q = np.zeros((N, N))
 for i in range(N):
     for j in range(N):
         if i == j:
-            Q[i,j] = -mu[i] + lam*(1 - 2*B)
+            Q[i,j] = q_risk * cov[i,j] - mu[i] + lam*(1 - 2*B)
         else:
             Q[i,j] = q_risk*cov[i,j] + 2*lam
 
