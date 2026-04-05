@@ -1,4 +1,4 @@
-
+"""
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  BLOQADE QAOA — PORTFOLIO OPTIMISATION (8 QUBITS)                  ║
 ║  YQuantum 2026 | The Hartford & Capgemini Quantum Lab | QuEra      ║
