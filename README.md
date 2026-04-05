@@ -73,8 +73,25 @@ CVaR (worst-5 average) computed for QAOA and brute-force portfolios to assess in
 
 ## Setup
 
+### Requirements
+- **Python 3.10 or 3.11** (recommended — PyQrack wheels are not available for all platforms on 3.12+)
+- All dependencies in `requirements.txt`
+
+### Install
+
 ```bash
 pip install -r requirements.txt
+```
+
+> ⚠️ **Bloqade note:** `bloqade-pyqrack[pyqrack-cpu]` is the simulator backend required
+> by `03_bloqade_circuit.py`. If installation fails (e.g. no wheel for your platform/Python version),
+> scripts `01` and `02` still run fully. Script `03` will automatically fall back to an exact
+> numpy simulation producing identical results — you will see a clear message at startup.
+
+### Verify Bloqade works (optional but recommended before running script 03)
+
+```bash
+python -c "from bloqade import qasm2; from bloqade.pyqrack import PyQrack; print('Bloqade OK')"
 ```
 
 ## Run Order
