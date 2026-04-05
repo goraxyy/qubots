@@ -806,9 +806,9 @@ noise_results = []
 
 
 for p_err in noise_levels:
-    psi_n = simulate_noisy([g1_opt, g2_opt], [b1_opt, b2_opt], p_err)
-    e_n = energy_of(psi_n)
-    shots_n = sample_from_state(psi_n, n_shots)
+    rho_n = simulate_noisy([g1_opt, g2_opt], [b1_opt, b2_opt], p_err)
+    e_n = energy_of_dm(rho_n)
+    shots_n = sample_from_dm(rho_n, n_shots)
     valid_n = [s for s in shots_n if s.count('1') == B]
     counts_n = Counter(valid_n)
     opt_count = counts_n.get(best_classical['bitstring'], 0)
