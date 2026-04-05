@@ -146,7 +146,45 @@ for i in range(N):
     for j in range(N):
         row += f"{Q[i,j]:>8.4f}  "
     print(row)
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 2b — LAMBDA SENSITIVITY ANALYSIS
+# ═══════════════════════════════════════════════════════════════════
+# Lambda controls how strictly the budget constraint B=4 is enforced.
+# Too small → many solutions ignore the constraint (infeasible).
+# Too large → the penalty dominates and return/risk terms are ignored.
 
+print(f"\n[2b] LAMBDA SENSITIVITY")
+print(f"     {'λ':>6}  {'Best cost':>12}  {'Valid (B=4)?':>13}  {'Return':>8}  {'Sharpe':>8}")
+print(f"     {'-'*55}")
+
+for lam_test in [1, 2, 5, 10, 20]:
+    Q_test = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            if i == j:
+                Q_test[i, i] = q_risk * cov[i, i] - mu[i] + lam_test * (1 - 2*B)
+            else:
+                Q_test[i, j] = q_risk * cov[i, j] + 2 * lam_test
+
+    best_cost_t, best_x_t = np.inf, None
+    for idx in range(2**N):
+        x_t = np.array([int(b) for b in format(idx, f'0{N}b')], dtype=float)
+        c_t = float(x_t @ Q_test @ x_t)
+        if c_t < best_cost_t:
+            best_cost_t, best_x_t = c_t, x_t
+
+    n_sel = int(best_x_t.sum())
+    is_valid = (n_sel == B)
+    if is_valid:
+        w_t = best_x_t / B
+        ret_t = float(w_t @ mu)
+        vol_t = float(np.sqrt(w_t @ cov @ w_t))
+        sharpe_t = (ret_t - mu[7]) / vol_t
+        print(f"     {lam_test:>6}  {best_cost_t:>12.4f}  {'✓ YES':>13}  {ret_t*100:>7.2f}%  {sharpe_t:>8.3f}")
+    else:
+        print(f"     {lam_test:>6}  {best_cost_t:>12.4f}  {f'✗ picks {n_sel}':>13}  {'—':>8}  {'—':>8}")
+
+print(f"\n     → λ=5 chosen: feasible solutions, penalty doesn't dominate")
 
 
 
