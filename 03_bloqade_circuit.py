@@ -34,6 +34,23 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+# ── Environment pre-check ────────────────────────────────────────────────────
+import sys
+print(f"Python {sys.version}")
+try:
+    from bloqade import qasm2
+    from bloqade.pyqrack import PyQrack
+    import bloqade
+    print(f"✓ Bloqade {bloqade.__version__} ready")
+    _BLOQADE_OK = True
+except ImportError as _e:
+    print(f"✗ Bloqade import failed: {_e}")
+    print(f"  Fix: pip install 'bloqade>=0.16' 'bloqade-pyqrack[pyqrack-cpu]>=0.4'")
+    print(f"  Note: Python 3.10 or 3.11 recommended; 3.12+ may lack PyQrack wheels")
+    print(f"  Continuing with exact numpy simulation (same physics, no Bloqade API calls)")
+    _BLOQADE_OK = False
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 # ═══════════════════════════════════════════════════════════════════
 # SECTION 1 — DATA
@@ -369,7 +386,7 @@ try:
     BLOQADE_AVAILABLE = True
     print(f"    ✓ Bloqade imported successfully")
 except ImportError:
-    BLOQADE_AVAILABLE = False
+    BLOQADE_AVAILABLE = _BLOQADE_OK  # already checked at startup
     print(f"    ✗ Bloqade not installed — using exact simulation")
     print(f"      Install with: pip install bloqade bloqade-pyqrack[pyqrack-cpu]")
 
