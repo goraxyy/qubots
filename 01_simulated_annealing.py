@@ -1,5 +1,5 @@
 """
-QUBO / Ising Portfolio Optimiser
+QUBO / Ising Portfolio Optimizer
 =================================
 Assets: A017 (Gov Bonds), A026 (IG Credit), A013 (HY Credit),
         A020 (Equities US), A023 (Equities Intl), A038 (Infrastructure),
@@ -160,7 +160,7 @@ portfolio_return = sum(selected_mu) / B  # equal weight
 
 
 print("=" * 60)
-print("  QUBO / ISING PORTFOLIO OPTIMISATION RESULTS")
+print("  QUBO / ISING PORTFOLIO OPTIMIZATION RESULTS")
 print("=" * 60)
 print(f"\nParameters:  q={q_param}, λ={lam}, B={B}")
 print(f"QUBO energy (minimised): {best_e:.6f}")
@@ -211,6 +211,3 @@ sharpe = (portfolio_return - mu[7]) / port_std  # mu[7] = cash as risk-free
 print(f"  Portfolio volatility (std dev):         {port_std*100:.2f}%")
 print(f"  Sharpe ratio (vs cash):                 {sharpe:.3f}")
 print("=" * 60)
-
-
-
