@@ -188,55 +188,53 @@ for _ in range(N-1):
 psi0 = psi0.astype(complex)
 
 
-def apply_qaoa(gamma_list, beta_list, psi_init, noise=False, p_err=0.0):
-    """Run QAOA circuit for p layers. Optionally apply depolarising noise."""
-    psi = psi_init.copy()
+# ── Top-level helper functions (density-matrix noise model) ──────────────────
+
+def apply_qaoa_noiseless(gamma_list, beta_list):
+    """Pure statevector evolution — used for angle optimisation."""
+    psi = psi0.copy()
     for gamma, beta in zip(gamma_list, beta_list):
-        # Problem unitary
-        UC = expm(-1j * gamma * H_C)
-        psi = UC @ psi
-        # Mixer unitary
-        UM = expm(-1j * beta * H_M)
-        psi = UM @ psi
-        # Depolarising noise (per qubit, per layer)
-        def apply_qaoa_noiseless(gamma_list, beta_list):
-          """Pure statevector evolution — used for angle optimisation."""
-          psi = psi0.copy()
-          for gamma, beta in zip(gamma_list, beta_list):
-              psi = expm(-1j * gamma * H_C) @ psi
-              psi = expm(-1j * beta  * H_M) @ psi
-          return psi
-      
-      
-        def apply_qaoa_noisy(gamma_list, beta_list, p_err):
-            """
-            Density-matrix QAOA with depolarising noise.
-            rho_out = (1 - p_err) * U rho U† + p_err * I/dim
-            applied after each layer.
-            """
-            rho = np.outer(psi0, psi0.conj())
-            identity_dm = np.eye(dim, dtype=complex) / dim
-            for gamma, beta in zip(gamma_list, beta_list):
-                UC = expm(-1j * gamma * H_C)
-                UM = expm(-1j * beta  * H_M)
-                rho = UC @ rho @ UC.conj().T
-                rho = UM @ rho @ UM.conj().T
-                if p_err > 0:
-                    rho = (1 - p_err) * rho + p_err * identity_dm
-            return rho
-        
-        
-        def energy_from_dm(rho):
-            return float(np.real(np.trace(rho @ H_C)))
-        
-        
-        def sample_from_dm(rho, n_shots=2000):
-            probs = np.real(np.diag(rho))
-            probs = np.maximum(probs, 0)
-            probs /= probs.sum()
-            indices = np.random.choice(dim, size=n_shots, p=probs)
-            return [format(idx, f'0{N}b') for idx in indices]
+        psi = expm(-1j * gamma * H_C) @ psi
+        psi = expm(-1j * beta  * H_M) @ psi
     return psi
+
+
+def apply_qaoa_noisy(gamma_list, beta_list, p_err):
+    """
+    Density-matrix QAOA with depolarising noise.
+    rho_out = (1 - p_err) * U rho U† + p_err * I/dim  applied after each layer.
+    """
+    rho = np.outer(psi0, psi0.conj())
+    identity_dm = np.eye(dim, dtype=complex) / dim
+    for gamma, beta in zip(gamma_list, beta_list):
+        UC = expm(-1j * gamma * H_C)
+        UM = expm(-1j * beta  * H_M)
+        rho = UC @ rho @ UC.conj().T
+        rho = UM @ rho @ UM.conj().T
+        if p_err > 0:
+            rho = (1 - p_err) * rho + p_err * identity_dm
+    return rho
+
+
+def energy_from_dm(rho):
+    return float(np.real(np.trace(rho @ H_C)))
+
+
+def sample_from_dm(rho, n_shots=2000):
+    probs = np.real(np.diag(rho))
+    probs = np.maximum(probs, 0)
+    probs /= probs.sum()
+    indices = np.random.choice(dim, size=n_shots, p=probs)
+    return [format(idx, f'0{N}b') for idx in indices]
+
+
+def apply_qaoa(gamma_list, beta_list, psi_init, noise=False, p_err=0.0):
+    """Run QAOA circuit for p layers. Routes to noisy or noiseless path."""
+    if noise and p_err > 0:
+        # Returns a density matrix, not a state vector
+        return apply_qaoa_noisy(gamma_list, beta_list, p_err)
+    else:
+        return apply_qaoa_noiseless(gamma_list, beta_list)
 
 
 def energy_expectation(psi):
