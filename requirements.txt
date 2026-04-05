@@ -1,6 +1,10 @@
+# Python 3.10 or 3.11 strongly recommended (PyQrack has no wheels for 3.12+ on all platforms)
 numpy>=1.26
 scipy>=1.12
 matplotlib>=3.8
 pandas>=2.2
+
+# Bloqade — must install the pyqrack-cpu extra explicitly
+# Do NOT just run "pip install bloqade" — the simulator won't be included
 bloqade>=0.16
 bloqade-pyqrack[pyqrack-cpu]>=0.4
