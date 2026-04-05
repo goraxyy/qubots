@@ -1,5 +1,6 @@
 numpy>=1.26
 scipy>=1.12
 matplotlib>=3.8
+pandas>=2.2
 bloqade>=0.16
 bloqade-pyqrack[pyqrack-cpu]>=0.4
