@@ -22,10 +22,9 @@ Insurance companies must invest large premium volumes under strict solvency and 
 The Markowitz objective with budget constraint becomes:
 min x^T Q x
 
-
 where the Q matrix encodes:
 - **Return reward**: `-mu[i]` on the diagonal
-- **Risk penalty**: `q_risk * cov[i,j]` on off-diagonals  
+- **Risk penalty**: `q_risk * cov[i,j]` on off-diagonals
 - **Budget penalty**: `lambda * (sum(x_i) - B)^2` expanded into the matrix
 
 Parameters: `q_risk = 1`, `lambda = 5`, `B = 4` (pick 4 of 8 assets)
@@ -34,7 +33,6 @@ Parameters: `q_risk = 1`, `lambda = 5`, `B = 4` (pick 4 of 8 assets)
 QUBO binary variables `x_i ∈ {0,1}` are mapped to Ising spins `s_i ∈ {-1,+1}` via `x_i = (1 + s_i) / 2`, giving:
 H = sum_i h_i * Z_i + sum_{i<j} J_ij * Z_i * Z_j
 
-
 ### 4. Quantum Circuit (Bloqade)
 - 8 qubits in a 2×4 neutral atom grid, spacing 5μm, Rydberg blockade radius 15μm
 - Fully connected graph — matches the dense QUBO structure of the portfolio problem
@@ -42,8 +40,19 @@ H = sum_i h_i * Z_i + sum_{i<j} J_ij * Z_i * Z_j
 - Angles optimised via grid search + refinement
 - Executed via Bloqade's PyQrack simulator (`state_vector` + `multi_run`)
 
-### 5. Noise Analysis
-Depolarising noise swept from 0% to 5% per-qubit per-layer. Results show energy remains stable up to ~1% gate error, consistent with current Rydberg hardware capabilities.
+### 5. Classical Baselines
+- **Simulated Annealing** (`01_simulated_annealing.py`) — classical combinatorial solver
+- **Markowitz MVO** (`03_bloqade_circuit.py`) — continuous mean-variance optimisation via scipy SLSQP
+- **Quantum Annealing** — adiabatic interpolation H(s) = (1-s)H_M + s*H_C for D-Wave comparison
+
+### 6. Noise Analysis
+Depolarising noise swept from 0% to 5% per-qubit per-layer using a proper density matrix channel:
+`rho_noisy = (1 - p) * U rho U† + p * I/dim`
+Results show energy remains stable up to ~1% gate error, consistent with current Rydberg hardware capabilities.
+
+### 7. Stress Testing (Hartford-specific)
+Portfolio performance evaluated under real market stress scenarios from `investment_dataset_scenarios.csv`.
+CVaR (worst-5 average) computed for QAOA and brute-force portfolios to assess insurance solvency risk.
 
 ---
 
@@ -53,51 +62,59 @@ Depolarising noise swept from 0% to 5% per-qubit per-layer. Results show energy 
 |---|---|
 | `01_simulated_annealing.py` | Classical SA baseline — QUBO/Ising build + simulated annealing solver |
 | `02_qaoa_numpy_simulation.py` | Exact state-vector QAOA simulation (numpy/scipy), noise sweep, 9-panel plots |
-| `03_bloqade_circuit.py` | Real Bloqade `@qasm2.main` circuit, PyQrack execution, shot sampling |
+| `03_bloqade_circuit.py` | Real Bloqade `@qasm2.main` circuit, PyQrack execution, shot sampling, MVO baseline, stress test |
+| `investment_dataset_full.xlsx` | Full 50-asset return history |
 | `investment_dataset_covariance.csv` | Full 50×50 covariance matrix |
+| `investment_dataset_correlation.csv` | Full 50×50 correlation matrix |
 | `investment_dataset_assets.csv` | Asset metadata (sector, expected return, etc.) |
-| `investment_dataset_scenarios.csv` | Stress scenario data |
+| `investment_dataset_scenarios.csv` | Stress scenario data (used for CVaR analysis) |
 
 ---
 
 ## Setup
 
 ```bash
-pip install bloqade bloqade-pyqrack[pyqrack-cpu] scipy numpy matplotlib
+pip install -r requirements.txt
 ```
 
-## Running
+## Run Order
+
+Run scripts in sequence — each builds on the previous:
 
 ```bash
-# Classical baseline
+# 1. Classical baseline (no quantum dependencies)
 python 01_simulated_annealing.py
 
-# Exact QAOA simulation + plots
+# 2. Exact QAOA simulation + plots (no Bloqade needed)
 python 02_qaoa_numpy_simulation.py
+# → saves outputs/qaoa_numpy_results.png
 
-# Real Bloqade circuit execution
+# 3. Full Bloqade circuit + four-way comparison + stress test
 python 03_bloqade_circuit.py
+# → saves bloqade_qaoa_results.png
 ```
+
+## Key Parameters
+
+| Parameter | Value | Meaning |
+|-----------|-------|---------|
+| N | 8 | Number of qubits / assets |
+| B | 4 | Portfolio size (assets to select) |
+| q_risk | 1 | Risk aversion |
+| λ | 5 | Budget penalty strength |
+| p | 2 | QAOA circuit depth |
 
 ---
 
 ## Results
 
-*(To be updated with final numbers)*
+*(Run `python 03_bloqade_circuit.py` to generate final numbers — outputs saved to `bloqade_qaoa_results.png`)*
 
-- **Selected portfolio**: TBD
-- **Expected return**: TBD
-- **Volatility**: TBD
-- **Sharpe ratio**: TBD
-- **QAOA energy (p=2)**: TBD
 - **Noise tolerance**: stable up to ~1% gate error
+- **Connectivity**: fully connected via Rydberg blockade — ideal for dense QUBO graphs
 
 ---
 
 ## Team
 
 QuBots — YQuantum 2026
-
-
-
-
