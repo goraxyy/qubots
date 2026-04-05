@@ -837,16 +837,6 @@ print(f"  {'Sharpe':<22} {sharpe_q:>16.3f} {sharpe_qa:>18.3f} {sharpe_c:>14.3f}"
 print(f"  {'Angle tuning needed':<22} {'Yes (2p params)':>16} {'No':>18} {'N/A':>14}")
 print(f"  {'Hardware analogy':<22} {'Gate-based QPU':>16} {'D-Wave/analog':>18} {'Classical CPU':>14}")
 
-Place Fix 5 immediately after the THREE-WAY COMPARISON block ends (after the last print(f" {'Hardware analogy'...} line), and before Section 10 — NOISE ANALYSIS begins.
-
-The exact insertion point looks like this:
-
-python
-# ... existing code above ...
-
-    print(f"  {'Angle tuning needed':<22} {'Yes (2p params)':>16} {'No':>18} {'N/A':>14}")
-    print(f"  {'Hardware analogy':<22} {'Gate-based QPU':>16} {'D-Wave/analog':>18} {'Classical CPU':>14}")
-
 # ═══════════════════════════════════════════════════════════════════
 # SECTION 9c — CLASSICAL MARKOWITZ MVO BASELINE
 # ═══════════════════════════════════════════════════════════════════
