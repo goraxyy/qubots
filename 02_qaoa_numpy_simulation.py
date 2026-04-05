@@ -1,6 +1,6 @@
 
 """
-Bloqade Neutral Atom QAOA — Portfolio Optimisation
+Bloqade Neutral Atom QAOA — Portfolio Optimization
 ====================================================
 YQuantum 2026 | The Hartford & Capgemini Quantum Lab | QuEra
 
