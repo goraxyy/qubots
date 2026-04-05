@@ -762,30 +762,43 @@ print(f"\n[8] NOISE ANALYSIS")
 
 
 def simulate_noisy(gamma_list, beta_list, p_err):
-    """QAOA with depolarising noise using density matrix."""
-    psi = psi0.copy()
+    """
+    QAOA with depolarising noise — stays as density matrix the whole time.
+    rho = (1-p)*U rho U† + p * I/dim   applied after each layer.
+    Energy = Tr(rho @ H_C) instead of <psi|H_C|psi>.
+    """
+    # Start as a pure-state density matrix
+    rho = np.outer(psi0, psi0.conj())
     identity_dm = np.eye(dim, dtype=complex) / dim
 
-
     for gamma, beta in zip(gamma_list, beta_list):
-        # Apply cost unitary
-        psi = expm(-1j * gamma * H_C) @ psi
-        # Apply mixer unitary
-        psi = expm(-1j * beta * H_M) @ psi
+        UC = expm(-1j * gamma * H_C)
+        UM = expm(-1j * beta  * H_M)
 
+        # Apply cost unitary: rho → UC @ rho @ UC†
+        rho = UC @ rho @ UC.conj().T
+        # Apply mixer unitary: rho → UM @ rho @ UM†
+        rho = UM @ rho @ UM.conj().T
 
+        # Apply depolarising channel after each layer
         if p_err > 0:
-            # Convert to density matrix
-            rho = np.outer(psi, psi.conj())
-            # Apply depolarising channel
             rho = (1 - p_err) * rho + p_err * identity_dm
-            # Extract the dominant pure state (largest eigenvalue)
-            evals, evecs = np.linalg.eigh(rho)
-            psi = evecs[:, -1].copy()
-            psi /= np.linalg.norm(psi)
+
+    return rho   # return the density matrix, NOT a state vector
 
 
-    return psi
+def energy_of_dm(rho):
+    """Tr(rho @ H_C) — energy from density matrix."""
+    return float(np.real(np.trace(rho @ H_C)))
+
+
+def sample_from_dm(rho, n_shots=2000):
+    """Sample bitstrings from diagonal of rho (measurement probabilities)."""
+    probs = np.real(np.diag(rho))
+    probs = np.maximum(probs, 0)
+    probs /= probs.sum()
+    indices = np.random.choice(dim, size=n_shots, p=probs)
+    return [format(idx, f'0{N}b') for idx in indices]
 
 
 noise_levels = [0.0, 0.005, 0.01, 0.02, 0.05, 0.10]
