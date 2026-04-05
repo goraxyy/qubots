@@ -1182,6 +1182,40 @@ print(f"    ✓ Saved: bloqade_qaoa_results.png")
 
 
 
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 14 — STRESS TEST (Hartford-specific)
+# ═══════════════════════════════════════════════════════════════════
+import pandas as pd
+
+print(f"\n[11] STRESS TEST — Scenario Analysis")
+
+try:
+    scenarios_df = pd.read_csv('investment_dataset_scenarios.csv', index_col=0)
+    available_cols = [a for a in ASSETS if a in scenarios_df.columns]
+    scen = scenarios_df[available_cols].dropna()
+
+    print(f"    Loaded {len(scen)} scenarios × {len(available_cols)} assets")
+
+    w_qaoa = np.array([1/B if x_q[i] == 1 else 0.0 for i in range(N)])
+    w_bf   = np.array([1/B if x_c[i] == 1 else 0.0 for i in range(N)])
+
+    for label, w in [("QAOA portfolio", w_qaoa), ("Brute-force", w_bf)]:
+        w_sub = np.array([w[ASSETS.index(a)] for a in available_cols])
+        scenario_returns = scen.values @ w_sub
+        worst5 = np.sort(scenario_returns)[:5]
+        cvar_5 = worst5.mean()
+        print(f"\n    {label}:")
+        print(f"      Mean scenario return : {scenario_returns.mean()*100:.2f}%")
+        print(f"      Worst single scenario: {scenario_returns.min()*100:.2f}%")
+        print(f"      CVaR (worst 5 avg)   : {cvar_5*100:.2f}%")
+        print(f"      Scenarios with loss  : {(scenario_returns < 0).sum()} / {len(scenario_returns)}")
+
+except FileNotFoundError:
+    print("    investment_dataset_scenarios.csv not found in working directory.")
+    print("    Run from the repo root: python 03_bloqade_circuit.py")
+except Exception as e:
+    print(f"    Stress test error: {e}")
+
 
 # ═══════════════════════════════════════════════════════════════════
 # SECTION 13 — FINAL SUMMARY
