@@ -423,7 +423,6 @@ ax3.set_xticks(range(len(top10)))
 ax3.set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
 ax3.set_title('Top 10 valid portfolios (shots)', fontsize=9)
 ax3.set_ylabel('Shot count')
-s
 # ── Plot 4: Noise degradation — energy ──────────────────────────
 ax4 = fig.add_subplot(3, 3, 4)
 ax4.plot([p*100 for p in noise_levels], noise_energies, 'o-', color='#c0392b')
