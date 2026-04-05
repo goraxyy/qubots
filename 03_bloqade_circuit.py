@@ -617,19 +617,32 @@ if BLOQADE_AVAILABLE:
         # METHOD B: Multi-run for shot sampling
         print(f"    Running Bloqade multi_run({n_shots} shots)...")
         results = device.multi_run(circuit, n_shots)
-        # Each result is a list of PyQrackQubit objects.
-        # We need to extract the measurement outcomes.
-        # After measurement, each qubit is in |0⟩ or |1⟩.
-        # We read the classical register state from the qubit states.
         print(f"    ✓ {n_shots} shots completed via Bloqade")
-
-
-        # Extract bitstrings from the multi_run results
-        # Bloqade returns qubit objects — we sample from state instead
-        if bloqade_statevector is not None:
-            bloqade_shots = sample_from_state(bloqade_statevector, n_shots)
-        else:
-            bloqade_shots = sample_from_state(psi_exact, n_shots)
+        
+        # Extract bitstrings: each result is a dict mapping classical bit
+        # register name to an integer. We read the 'c' register (N bits).
+        extracted = []
+        try:
+            for shot_result in results:
+                # shot_result is a dict like {'c': 0b10110010}
+                if isinstance(shot_result, dict):
+                    val = list(shot_result.values())[0]
+                    extracted.append(format(int(val), f'0{N}b'))
+                elif hasattr(shot_result, '__iter__'):
+                    # Fallback: list of 0/1 bit values
+                    extracted.append(''.join(str(int(b)) for b in shot_result))
+            if len(extracted) == n_shots:
+                bloqade_shots = extracted
+                print(f"    ✓ Parsed {len(bloqade_shots)} bitstrings from Bloqade multi_run")
+            else:
+                raise ValueError(f"Only parsed {len(extracted)} of {n_shots} shots")
+        except Exception as parse_err:
+            print(f"    multi_run parse note: {parse_err}")
+            print(f"    Falling back to statevector sampling")
+            bloqade_shots = sample_from_state(
+                bloqade_statevector if bloqade_statevector is not None else psi_exact,
+                n_shots
+            )
 
 
     except Exception as e:
