@@ -199,13 +199,43 @@ def apply_qaoa(gamma_list, beta_list, psi_init, noise=False, p_err=0.0):
         UM = expm(-1j * beta * H_M)
         psi = UM @ psi
         # Depolarising noise (per qubit, per layer)
-        if noise and p_err > 0:
-            probs = np.abs(psi)**2
+        def apply_qaoa_noiseless(gamma_list, beta_list):
+          """Pure statevector evolution — used for angle optimisation."""
+          psi = psi0.copy()
+          for gamma, beta in zip(gamma_list, beta_list):
+              psi = expm(-1j * gamma * H_C) @ psi
+              psi = expm(-1j * beta  * H_M) @ psi
+          return psi
+      
+      
+        def apply_qaoa_noisy(gamma_list, beta_list, p_err):
+            """
+            Density-matrix QAOA with depolarising noise.
+            rho_out = (1 - p_err) * U rho U† + p_err * I/dim
+            applied after each layer.
+            """
+            rho = np.outer(psi0, psi0.conj())
+            identity_dm = np.eye(dim, dtype=complex) / dim
+            for gamma, beta in zip(gamma_list, beta_list):
+                UC = expm(-1j * gamma * H_C)
+                UM = expm(-1j * beta  * H_M)
+                rho = UC @ rho @ UC.conj().T
+                rho = UM @ rho @ UM.conj().T
+                if p_err > 0:
+                    rho = (1 - p_err) * rho + p_err * identity_dm
+            return rho
+        
+        
+        def energy_from_dm(rho):
+            return float(np.real(np.trace(rho @ H_C)))
+        
+        
+        def sample_from_dm(rho, n_shots=2000):
+            probs = np.real(np.diag(rho))
+            probs = np.maximum(probs, 0)
             probs /= probs.sum()
-            # Mix state with maximally mixed state
-            psi = np.sqrt(1 - p_err) * psi + np.sqrt(p_err/dim) * np.ones(dim, dtype=complex)
-            # Renormalise
-            psi /= np.linalg.norm(psi)
+            indices = np.random.choice(dim, size=n_shots, p=probs)
+            return [format(idx, f'0{N}b') for idx in indices]
     return psi
 
 
