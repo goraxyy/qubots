@@ -788,7 +788,7 @@ for i in range(N):
     if x_q[i] == 1:
         print(f"      ✓ {ASSETS[i]:>4} ({SECTORS[i]:>18}) "
               f"μ={mu[i]*100:.2f}%  σ={np.sqrt(cov[i,i])*100:.2f}%")
- # ═══════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════
 # SECTION 9b — QUANTUM ANNEALING SIMULATION
 # ═══════════════════════════════════════════════════════════════════
 # Adiabatic approach: slowly interpolate H(s) = (1-s)*H_M + s*H_C
@@ -836,6 +836,64 @@ print(f"  {'Volatility':<22} {vol_q*100:>15.2f}% {vol_qa*100:>17.2f}% {vol_c*100
 print(f"  {'Sharpe':<22} {sharpe_q:>16.3f} {sharpe_qa:>18.3f} {sharpe_c:>14.3f}")
 print(f"  {'Angle tuning needed':<22} {'Yes (2p params)':>16} {'No':>18} {'N/A':>14}")
 print(f"  {'Hardware analogy':<22} {'Gate-based QPU':>16} {'D-Wave/analog':>18} {'Classical CPU':>14}")
+
+Place Fix 5 immediately after the THREE-WAY COMPARISON block ends (after the last print(f" {'Hardware analogy'...} line), and before Section 10 — NOISE ANALYSIS begins.
+
+The exact insertion point looks like this:
+
+python
+# ... existing code above ...
+
+    print(f"  {'Angle tuning needed':<22} {'Yes (2p params)':>16} {'No':>18} {'N/A':>14}")
+    print(f"  {'Hardware analogy':<22} {'Gate-based QPU':>16} {'D-Wave/analog':>18} {'Classical CPU':>14}")
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 9c — CLASSICAL MARKOWITZ MVO BASELINE
+# ═══════════════════════════════════════════════════════════════════
+from scipy.optimize import minimize as sp_minimize
+
+print(f"\n[9c] CLASSICAL MARKOWITZ MVO")
+
+def mvo_objective(w):
+    return q_risk * float(w @ cov @ w) - float(w @ mu)
+
+w0 = np.ones(N) / N
+constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}]
+bounds = [(0.0, 1.0)] * N
+
+mvo_result = sp_minimize(
+    mvo_objective, w0,
+    method='SLSQP',
+    bounds=bounds,
+    constraints=constraints,
+    options={'ftol': 1e-12, 'maxiter': 1000}
+)
+
+w_mvo = mvo_result.x
+ret_mvo = float(w_mvo @ mu)
+vol_mvo = float(np.sqrt(w_mvo @ cov @ w_mvo))
+sharpe_mvo = (ret_mvo - mu[7]) / vol_mvo
+
+print(f"    MVO converged: {mvo_result.success}")
+print(f"    Optimal weights:")
+for i in range(N):
+    if w_mvo[i] > 0.005:
+        print(f"      {ASSETS[i]:>4} ({SECTORS[i]:<18}) w={w_mvo[i]*100:.1f}%  μ={mu[i]*100:.2f}%")
+print(f"    Return:    {ret_mvo*100:.2f}%")
+print(f"    Volatility:{vol_mvo*100:.2f}%")
+print(f"    Sharpe:    {sharpe_mvo:.3f}")
+
+print(f"\n{'='*80}")
+print(f"  FOUR-WAY COMPARISON: QAOA vs QA vs Brute-force vs Markowitz MVO")
+print(f"{'='*80}")
+print(f"  {'Metric':<22} {'QAOA p=2':>14} {'Q.Annealing':>14} {'Brute-force':>14} {'MVO':>10}")
+print(f"  {'-'*76}")
+print(f"  {'Return':<22} {ret_q*100:>13.2f}% {ret_qa*100:>13.2f}% {ret_c*100:>13.2f}% {ret_mvo*100:>9.2f}%")
+print(f"  {'Volatility':<22} {vol_q*100:>13.2f}% {vol_qa*100:>13.2f}% {vol_c*100:>13.2f}% {vol_mvo*100:>9.2f}%")
+print(f"  {'Sharpe':<22} {sharpe_q:>14.3f} {sharpe_qa:>14.3f} {sharpe_c:>14.3f} {sharpe_mvo:>10.3f}")
+print(f"  {'Constraint type':<22} {'Binary':>14} {'Binary':>14} {'Binary':>14} {'Continuous':>10}")
+print(f"  {'Solver':<22} {'Bloqade QPU':>14} {'Adiabatic':>14} {'Exhaustive':>14} {'SLSQP':>10}")
+print(f"  {'Scales to N>>8?':<22} {'✓ (NISQ)':>14} {'✓ (analog)':>14} {'✗ (2^N)':>14} {'✓':>10}")
 
 
 
