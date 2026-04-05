@@ -737,7 +737,54 @@ for i in range(N):
     if x_q[i] == 1:
         print(f"      ✓ {ASSETS[i]:>4} ({SECTORS[i]:>18}) "
               f"μ={mu[i]*100:.2f}%  σ={np.sqrt(cov[i,i])*100:.2f}%")
+ # ═══════════════════════════════════════════════════════════════════
+# SECTION 9b — QUANTUM ANNEALING SIMULATION
+# ═══════════════════════════════════════════════════════════════════
+# Adiabatic approach: slowly interpolate H(s) = (1-s)*H_M + s*H_C
+# from pure mixer (s=0) to pure problem (s=1).
+# Unlike QAOA, no angle tuning needed — just choose number of steps.
+# Maps directly to D-Wave / analog neutral atom hardware.
 
+print(f"\n[9b] QUANTUM ANNEALING")
+
+def quantum_annealing(steps=300, dt=0.05):
+    """Adiabatic evolution from |+>^N to ground state of H_C."""
+    psi = psi0.copy()
+    for t in range(steps):
+        s = t / steps                              # annealing fraction 0→1
+        H_t = (1 - s) * H_M + s * H_C            # interpolated Hamiltonian
+        psi = expm(-1j * dt * H_t) @ psi          # small time step
+        psi /= np.linalg.norm(psi)                # keep normalised
+    return psi
+
+psi_qa = quantum_annealing(steps=300, dt=0.05)
+shots_qa = sample_from_state(psi_qa, n_shots)
+valid_qa = [s for s in shots_qa if s.count('1') == B]
+counts_qa = Counter(valid_qa)
+best_qa_bs = counts_qa.most_common(1)[0][0]
+x_qa = np.array([int(b) for b in best_qa_bs])
+ret_qa, vol_qa, sharpe_qa = portfolio_metrics(x_qa)
+cost_qa = qubo_cost(x_qa)
+
+print(f"    Steps: 300, dt=0.05")
+print(f"    Best bitstring: {best_qa_bs}")
+print(f"    QUBO cost:      {cost_qa:.6f}")
+print(f"    Match optimal:  {'✓ YES' if best_qa_bs == best_classical['bitstring'] else '✗ NO'}")
+print(f"    Valid shots:    {len(valid_qa)}/{n_shots} ({100*len(valid_qa)/n_shots:.1f}%)")
+print(f"    Return: {ret_qa*100:.2f}%  Vol: {vol_qa*100:.2f}%  Sharpe: {sharpe_qa:.3f}")
+
+print(f"\n{'='*70}")
+print(f"  THREE-WAY COMPARISON")
+print(f"{'='*70}")
+print(f"  {'Metric':<22} {'QAOA p=2':>16} {'Quantum Annealing':>18} {'Brute-force':>14}")
+print(f"  {'-'*72}")
+print(f"  {'Bitstring':<22} {best_qaoa_bs:>16} {best_qa_bs:>18} {best_classical['bitstring']:>14}")
+print(f"  {'QUBO cost':<22} {best_qaoa_cost:>16.4f} {cost_qa:>18.4f} {best_classical['cost']:>14.4f}")
+print(f"  {'Return':<22} {ret_q*100:>15.2f}% {ret_qa*100:>17.2f}% {ret_c*100:>13.2f}%")
+print(f"  {'Volatility':<22} {vol_q*100:>15.2f}% {vol_qa*100:>17.2f}% {vol_c*100:>13.2f}%")
+print(f"  {'Sharpe':<22} {sharpe_q:>16.3f} {sharpe_qa:>18.3f} {sharpe_c:>14.3f}")
+print(f"  {'Angle tuning needed':<22} {'Yes (2p params)':>16} {'No':>18} {'N/A':>14}")
+print(f"  {'Hardware analogy':<22} {'Gate-based QPU':>16} {'D-Wave/analog':>18} {'Classical CPU':>14}")
 
 
 
