@@ -132,6 +132,9 @@ python 03_bloqade_circuit.py
 
 ---
 
+## Slides
+https://docs.google.com/presentation/d/1XIo6cwxRop6iZYg7M5266XKUhwO8SaDZ/edit?usp=sharing&ouid=100823284726496128305&rtpof=true&sd=true
+
 ## Team
 
 QuBots — YQuantum 2026
