@@ -61,7 +61,8 @@ Q = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
         if i == j:
-            Q[i][j] = -mu[i] + lam * (1 - 2*B)      # diagonal
+            Q[i][j] = q_param * cov[i][i] - mu[i] + lam * (1 - 2*B)      # diagonal
+                
         else:
             Q[i][j] = q_param * cov[i][j] + 2 * lam  # off-diagonal
 
