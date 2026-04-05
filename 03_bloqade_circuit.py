@@ -683,9 +683,11 @@ if BLOQADE_AVAILABLE:
             )
 
 
-    except Exception as e:
-        print(f"    Bloqade execution note: {e}")
-        print(f"    Using exact state-vector simulation (identical physics)")
+        except Exception as e:
+            import traceback
+            print(f"    ✗ Bloqade execution failed with: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            print(f"    Using exact state-vector simulation (identical physics)")
 
 
 # Fallback: always compute via exact simulation
