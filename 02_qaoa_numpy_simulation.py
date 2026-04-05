@@ -502,8 +502,12 @@ ax9.legend(fontsize=8)
 
 
 plt.tight_layout()
-plt.savefig('/mnt/user-data/outputs/bloqade_portfolio_results.png', dpi=150, bbox_inches='tight')
-plt.close()
+import os
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outputs')
+os.makedirs(output_dir, exist_ok=True)
+output_path = os.path.join(output_dir, 'qaoa_numpy_results.png')
+plt.savefig(output_path, dpi=150, bbox_inches='tight')
+print(f"\n[7] Plot saved → {output_path}")
 print(f"\n[7] Plots saved → bloqade_portfolio_results.png")
 
 
