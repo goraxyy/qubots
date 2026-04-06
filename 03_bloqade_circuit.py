@@ -488,9 +488,6 @@ if BLOQADE_AVAILABLE:
 #      — sampling noise from finite shots would confuse it.
 #   3. Bloqade's multi_run gives us samples but not expectations.
 #   4. This computes EXACTLY the same physics as the Bloqade circuit.
-#
-# YOUR PREVIOUS CODE HAD THIS RIGHT. We keep it as the inner loop
-# of the optimiser, then verify with Bloqade at the end.
 
 
 dim = 2**N
